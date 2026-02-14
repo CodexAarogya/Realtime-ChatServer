@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to chatServer</title>
+</head>
+<body>
+    {% block content %}
+    <h1>This is chat view</h1>
+        <form action="" method="post">
+        {% csrf_token %}
+        <input type="text" id="messageInput" name="message" placeholder="Enter message">
+        <button type="submit">Send</button>'
+        <div class="messages">
+            Messages will appear here...
+        </div>
+    </form>
+
+    {% block domready %}
+    <script>
+        let messagesDiv = document.querySelector(".messages");
+        let messageInput = document.querySelector("#messageInput");
+        let chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/'); 
+
+        let form = document.querySelector("form");
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            let message = messageInput.value;
+            chatSocket.send(JSON.stringify({'message': message}));
+            messageInput.value = '';
+        };
+        
+        
+        chatSocket.onmessage = function(e) {
+            let data = JSON.parse(e.data);
+            let message = data.message;
+            let messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+        };
+        
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed:', e);
+        };
+
+    </script>
+    {% endblock domready %}
+
+
+    {% endblock content %}
+</body>
+</html>
